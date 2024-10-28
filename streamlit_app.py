@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go  # Updated for Plotly
 from datetime import datetime, timedelta
 import logging
 
@@ -46,6 +46,11 @@ default_inflation = 2.0
 # Input fields
 monthly_savings = st.sidebar.number_input(
     "Monthly Savings (€)", min_value=0, value=500, step=100
+)
+
+# **New Input: Starting Wealth**
+starting_wealth = st.sidebar.number_input(
+    "Starting Wealth (€)", min_value=0.0, value=10000.0, step=1000.0
 )
 
 equity_percent = st.sidebar.slider(
@@ -100,7 +105,7 @@ def remove_event(index):
 with st.sidebar.expander("Add New Expense"):
     event_name = st.text_input("Expense Name", value="House Purchase")
     event_amount = st.number_input("Expense Amount (€)", min_value=0.0, value=300000.0, step=1000.0)
-    event_date = st.date_input("Expense Date", value=start_date.date() + timedelta(days=365*5))
+    event_date = st.date_input("Expense Date", value=(start_date + timedelta(days=365*5)).date())
     if st.button("Add Expense"):
         if event_date < start_date.date():
             st.sidebar.error("Expense date cannot be in the past.")
@@ -126,6 +131,7 @@ else:
 # Function to simulate wealth over time
 @st.cache_data
 def simulate_wealth(
+    starting_wealth,
     monthly_saving,
     equity_pct,
     bond_pct,
@@ -146,7 +152,7 @@ def simulate_wealth(
     # Create a date range
     dates = pd.date_range(start=start_date, end=end_date, freq='M')
     wealth = []
-    total_wealth = 0.0
+    total_wealth = starting_wealth  # Initialize with starting wealth
     
     # Sort events by date
     sorted_events = sorted(events, key=lambda x: x['Date'])
@@ -189,6 +195,7 @@ def simulate_wealth(
 
 # Run simulation
 df_wealth = simulate_wealth(
+    starting_wealth=starting_wealth,  # Pass starting wealth
     monthly_saving=monthly_savings,
     equity_pct=equity_percent,
     bond_pct=bond_percent,
@@ -202,14 +209,29 @@ df_wealth = simulate_wealth(
 
 # Display simulation results
 st.subheader("Wealth Over Time")
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(df_wealth['Date'], df_wealth['Wealth (€)'], label='Total Wealth')
-ax.set_xlabel("Date")
-ax.set_ylabel("Wealth (€)")
-ax.set_title("Wealth Accumulation Over Time")
-ax.legend()
-ax.grid(True)
-st.pyplot(fig)
+
+# **Updated Visualization with Plotly**
+fig = go.Figure()
+
+fig.add_trace(
+    go.Scatter(
+        x=df_wealth['Date'],
+        y=df_wealth['Wealth (€)'],
+        mode='lines',
+        name='Total Wealth',
+        line=dict(color='blue')
+    )
+)
+
+fig.update_layout(
+    title="Wealth Accumulation Over Time",
+    xaxis_title="Date",
+    yaxis_title="Wealth (€)",
+    template='plotly_white',
+    hovermode='x unified'
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
 # Display final wealth
 final_wealth = df_wealth['Wealth (€)'].iloc[-1]
