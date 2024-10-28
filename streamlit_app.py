@@ -43,14 +43,16 @@ default_equity_return = 7.0 if region == 'US' else 6.0  # Example default return
 default_bond_return = 3.0 if region == 'US' else 2.5
 default_inflation = 2.0
 
-# Input fields
+# **Updated Input Fields with New Default Values**
+
+# Monthly Savings Input
 monthly_savings = st.sidebar.number_input(
-    "Monthly Savings (€)", min_value=0, value=500, step=100
+    "Monthly Savings (€)", min_value=0, value=2000, step=100  # Changed default from 500 to 2000
 )
 
-# **New Input: Starting Wealth**
+# Starting Wealth Input
 starting_wealth = st.sidebar.number_input(
-    "Starting Wealth (€)", min_value=0.0, value=10000.0, step=1000.0
+    "Starting Wealth (€)", min_value=0.0, value=500000.0, step=1000.0  # Changed default from 10,000 to 500,000
 )
 
 equity_percent = st.sidebar.slider(
